@@ -1,5 +1,3 @@
 streamlit
 transformers
 pandas
-os
-datetime
