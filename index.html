@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Company Information Blocks</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1rem;
+            padding: 1rem;
+        }
+        .block {
+            border: 1px solid #e5e7eb;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            background-color: #f9fafb;
+        }
+        .dialog-box {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto p-4">
+        <h1 class="text-2xl font-bold mb-4 text-center">Company Information Blocks</h1>
+        <div id="grid" class="grid-container"></div>
+    </div>
+
+    <script>
+        // Initialize blocks data
+        const numBlocks = 6; // Adjust number of blocks as needed
+        let blocks = JSON.parse(localStorage.getItem('blocks')) || Array(numBlocks).fill(null).map(() => ({
+            name: '',
+            phone: '',
+            email: '',
+            services: ''
+        }));
+
+        // Save blocks to localStorage
+        function saveBlocks() {
+            localStorage.setItem('blocks', JSON.stringify(blocks));
+        }
+
+        // Render blocks
+        function renderBlocks() {
+            const grid = document.getElementById('grid');
+            grid.innerHTML = '';
+            blocks.forEach((block, index) => {
+                const blockElement = document.createElement('div');
+                blockElement.className = 'block';
+                const uniqueLink = `${window.location.href}?block=${index}`;
+                blockElement.innerHTML = `
+                    <h2 class="font-semibold">Block ${index + 1}</h2>
+                    <p><strong>Name:</strong> ${block.name || 'N/A'}</p>
+                    <p><strong>Phone:</strong> ${block.phone || 'N/A'}</p>
+                    <p><strong>Email:</strong> ${block.email || 'N/A'}</p>
+                    <p><strong>Services:</strong> ${block.services || 'N/A'}</p>
+                    <a href="${uniqueLink}" class="text-blue-500 hover:underline" target="_blank">Edit Block ${index + 1}</a>
+                `;
+                grid.appendChild(blockElement);
+            });
+        }
+
+        // Show dialog box for input
+        function showDialog(blockIndex) {
+            const overlay = document.createElement('div');
+            overlay.className = 'overlay';
+            document.body.appendChild(overlay);
+
+            const dialog = document.createElement('div');
+            dialog.className = 'dialog-box';
+            dialog.innerHTML = `
+                <h2 class="text-lg font-bold mb-4">Enter Details for Block ${blockIndex + 1}</h2>
+                <form id="blockForm">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium">Company Name</label>
+                        <input type="text" id="name" class="w-full p-2 border rounded" value="${blocks[blockIndex].name}">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium">Phone Number</label>
+                        <input type="tel" id="phone" class="w-full p-2 border rounded" value="${blocks[blockIndex].phone}">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium">Email</label>
+                        <input type="email" id="email" class="w-full p-2 border rounded" value="${blocks[blockIndex].email}">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium">Services</label>
+                        <textarea id="services" class="w-full p-2 border rounded">${blocks[blockIndex].services}</textarea>
+                    </div>
+                    <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Submit</button>
+                    <button type="button" id="cancel" class="ml-2 bg-gray-300 text-black px-4 py-2 rounded hover:bg-gray-400">Cancel</button>
+                </form>
+            `;
+            document.body.appendChild(dialog);
+
+            // Handle form submission
+            document.getElementById('blockForm').onsubmit = (e) => {
+                e.preventDefault();
+                blocks[blockIndex] = {
+                    name: document.getElementById('name').value,
+                    phone: document.getElementById('phone').value,
+                    email: document.getElementById('email').value,
+                    services: document.getElementById('services').value
+                };
+                saveBlocks();
+                document.body.removeChild(dialog);
+                document.body.removeChild(overlay);
+                renderBlocks();
+            };
+
+            // Handle cancel
+            document.getElementById('cancel').onclick = () => {
+                document.body.removeChild(dialog);
+                document.body.removeChild(overlay);
+            };
+        }
+
+        // Check URL for block parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const blockIndex = parseInt(urlParams.get('block'));
+        if (!isNaN(blockIndex) && blockIndex >= 0 && blockIndex < numBlocks) {
+            showDialog(blockIndex);
+        }
+
+        // Initial render
+        renderBlocks();
+    </script>
+</body>
+</html>
